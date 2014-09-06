@@ -1,0 +1,35 @@
+{
+    "name": "h4cc/stack-mongrel2",
+    "description": "A adpater for using StackPHP with Mongrel2 via the HttpKernelInterface.",
+    "license": "MIT",
+    "keywords": [
+        "stack", "http", "mongrel2", "adapter"
+    ],
+    "authors": [
+        {
+            "name": "Julius Beckmann",
+            "email": "github@h4cc.de"
+        }
+    ],
+    "repositories": [
+        {
+            "type":"vcs",
+            "url":"/home/julius/php/mongrel2"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "symfony/http-kernel": "~2.0",
+        "h4cc/mongrel2": "dev-master"
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-4": {
+            "h4cc\\StackMongrel2\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": { "dev-master": "1.0-dev" }
+    }
+}
