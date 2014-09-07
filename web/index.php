@@ -15,22 +15,61 @@
 
 require_once(__DIR__.'/../vendor/autoload.php');
 
-class MyKernel implements \Symfony\Component\HttpKernel\HttpKernelInterface
-{
-    public function handle(\Symfony\Component\HttpFoundation\Request $request, $type = self::MASTER_REQUEST, $catch = true)
-    {
-        // Creating some output, that shows all provided data by mongrel2.
+$app = new Silex\Application();
 
-        $response = var_export($request->server->all(), true);
-        $response .= var_export($request->query->all(), true);
-        $response .= var_export($request->files->all(), true);
-        $response .= var_export($request->cookies->all(), true);
+$app['debug'] = true;
 
-        return new \Symfony\Component\HttpFoundation\Response('<pre>'.$response.'</pre');
-    }
-}
+// Hello world handler with name parameter.
+$app->get('/', function (\Symfony\Component\HttpFoundation\Request $request) {
+    $name = $request->get('name', 'world');
+    return new \Symfony\Component\HttpFoundation\Response('Hello '.$name);
+});
 
-$kernel = new MyKernel();
+// Simple POST form.
+$app->match('/form', function (\Symfony\Component\HttpFoundation\Request $request) {
+    return new \Symfony\Component\HttpFoundation\Response('
+    <html>
+        <body>
+            <p>Method: '.var_export($request->getMethod(), true).'</p>
+            <p>POST values: '.var_export($request->request->all(), true).'</p>
+            <form method="POST">
+                <input type="text" name="foo" value="bar" />
+                <input type="submit" value="Send" />
+            </form>
+        </body>
+    </html>
+    ');
+});
 
-$client = new \h4cc\StackMongrel2\Mongrel2HttpKernelHandler($kernel, 'tcp://127.0.0.1:9997', 'tcp://127.0.0.1:9996');
+// Simple file upload.
+$app->match('/fileupload', function (\Symfony\Component\HttpFoundation\Request $request) {
+    // TODO: Not workign yet, because of missing "multipart/*" parsing functionality.
+    return new \Symfony\Component\HttpFoundation\Response('
+    <html>
+        <body>
+            <p>Method: '.var_export($request->getMethod(), true).'</p>
+            <p>POST values: '.var_export($request->request->all(), true).'</p>
+            <p>FILES values: '.var_export($request->files->all(), true).'</p>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="aFile"/>
+                <input type="submit" value="Upload" />
+            </form>
+        </body>
+    </html>
+    ');
+});
+
+// Set and get Cookie.
+$app->get('/cookie', function (\Symfony\Component\HttpFoundation\Request $request) {
+    $uuid = $request->cookies->get('last_uuid');
+    $response = new \Symfony\Component\HttpFoundation\Response('Your last Mongrel Request-UUID: '.$uuid);
+    $response->headers->setCookie(
+        new \Symfony\Component\HttpFoundation\Cookie(
+            'last_uuid', $request->attributes->get('mongrel2_uuid').'_'.$request->attributes->get('mongrel2_listener')
+        )
+    );
+    return $response;
+});
+
+$client = new \h4cc\StackMongrel2\Mongrel2HttpKernelHandler($app, 'tcp://127.0.0.1:9997', 'tcp://127.0.0.1:9996');
 $client->run();

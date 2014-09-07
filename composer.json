@@ -1,6 +1,6 @@
 {
     "name": "h4cc/stack-mongrel2",
-    "description": "A adpater for using StackPHP with Mongrel2 via the HttpKernelInterface.",
+    "description": "A adapter for using StackPHP with Mongrel2 via the HttpKernelInterface.",
     "license": "MIT",
     "keywords": [
         "stack", "http", "mongrel2", "adapter"
@@ -11,18 +11,13 @@
             "email": "github@h4cc.de"
         }
     ],
-    "repositories": [
-        {
-            "type":"vcs",
-            "url":"/home/julius/php/mongrel2"
-        }
-    ],
     "require": {
         "php": ">=5.4.0",
         "symfony/http-kernel": "~2.0",
         "h4cc/mongrel2": "dev-master"
     },
     "require-dev": {
+        "silex/silex": "~1.2"
     },
     "autoload": {
         "psr-4": {

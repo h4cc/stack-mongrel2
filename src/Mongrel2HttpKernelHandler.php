@@ -15,7 +15,6 @@ use h4cc\Mongrel2\Handler;
 use h4cc\Mongrel2\Request as MongrelRequest;
 use h4cc\Mongrel2\Response as MongrelResponse;
 use h4cc\Mongrel2\Transport;
-use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
@@ -41,8 +40,10 @@ class Mongrel2HttpKernelHandler
     {
         // TODO: Exit should be possible here.
         while (true) {
+            // TODO: Make this non-blocking and provide a idle callback.
             $request = $this->waitForNextRequest();
             $response = $this->kernel->handle($request);
+            // TODO: Make this non-blocking maybe?
             $this->sendResponseToMongrel($request, $response);
         }
     }
@@ -54,10 +55,11 @@ class Mongrel2HttpKernelHandler
      */
     private function waitForNextRequest()
     {
-        // TODO: Make this non-blocking
         $mongrelRequest = $this->handler->receiveRequest();
 
-        return $this->createSymfony2Request($mongrelRequest);
+        $request = $this->createSymfony2Request($mongrelRequest);
+
+        return $request;
     }
 
     /**
@@ -77,7 +79,12 @@ class Mongrel2HttpKernelHandler
         );
 
         $mongrelResponse->setContent($response->getContent());
-        $mongrelResponse->setHeaders($response->headers->all());
+
+        $headers = $response->headers->all();
+        foreach ($response->headers->getCookies() as $cookie) {
+            $headers['Set-Cookie'][] = $cookie;
+        }
+        $mongrelResponse->setHeaders($headers);
 
         $mongrelResponse->setHttpVersion($response->getProtocolVersion());
         $mongrelResponse->setStatusCode($response->getStatusCode());
@@ -94,20 +101,23 @@ class Mongrel2HttpKernelHandler
      */
     private function createSymfony2Request(MongrelRequest $mongrelRequest)
     {
+        // Create a Symfony request from a Mongrel request.
         $request = Request::create(
             $mongrelRequest->getPath(),
             $mongrelRequest->getMethod(),
-            array(),
-            array(),
-            array(),
+            $mongrelRequest->getQuery(),
+            $mongrelRequest->getCookies(),
+            $mongrelRequest->getFiles(),
             $mongrelRequest->getServer(),
             $mongrelRequest->getBody()
         );
 
+        // Need to replace headers.
         $request->headers->replace($mongrelRequest->getHeaders());
         $request->query->replace($mongrelRequest->getQuery());
+        $request->request->replace($mongrelRequest->getPost());
 
-        // Store needed values for mongrel2 response.
+        // Store needed values for response back to mongrel2.
         $request->attributes->set('mongrel2_uuid', $mongrelRequest->getUuid());
         $request->attributes->set('mongrel2_listener', $mongrelRequest->getListener());
 
