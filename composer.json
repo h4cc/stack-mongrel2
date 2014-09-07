@@ -14,7 +14,8 @@
     "require": {
         "php": ">=5.4.0",
         "symfony/http-kernel": "~2.0",
-        "h4cc/mongrel2": "dev-master"
+        "h4cc/mongrel2": "dev-master",
+        "h4cc/multipart": "dev-master"
     },
     "require-dev": {
         "silex/silex": "~1.2"

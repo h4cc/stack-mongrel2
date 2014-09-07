@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-
-// This file can be used via apache or PHP internal webserver.
+// This file contains a Mongrel2 Handler using the silex app.
 
 $app = require_once(__DIR__.'/app.php');
 
-$app->run();
+$client = new \h4cc\StackMongrel2\Mongrel2HttpKernelHandler($app, 'tcp://127.0.0.1:9997', 'tcp://127.0.0.1:9996');
+$client->run();
